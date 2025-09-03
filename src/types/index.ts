@@ -1,0 +1,74 @@
+export interface Field {
+  id: string
+  name: string
+  type: "text" | "number" | "date" | "select" | "multiSelect" | "user" | "checkbox" | "url" | "email" | "phone"
+  width: number
+  visible: boolean
+  required?: boolean
+  options?: string[]
+  defaultValue?: any
+  description?: string
+}
+
+export interface Record {
+  id: string
+  createdAt: string
+  updatedAt: string
+  [key: string]: any
+}
+
+export interface View {
+  id: string
+  name: string
+  type: "table" | "kanban" | "calendar" | "form"
+  icon: string
+  fields: string[]
+  filters: FilterCondition[]
+  sorts: SortCondition[]
+  groupBy?: string
+}
+
+export interface FilterCondition {
+  id: string
+  fieldId: string
+  operator:
+    | "equals"
+    | "not_equals"
+    | "contains"
+    | "not_contains"
+    | "starts_with"
+    | "ends_with"
+    | "is_empty"
+    | "is_not_empty"
+    | "greater_than"
+    | "less_than"
+    | "greater_equal"
+    | "less_equal"
+  value: any
+  logic?: "and" | "or"
+}
+
+export interface SortCondition {
+  fieldId: string
+  direction: "asc" | "desc"
+}
+
+export interface GroupData {
+  key: string
+  label: string
+  color: string
+  records: Record[]
+  expanded: boolean
+}
+
+export interface TableState {
+  fields: Field[]
+  records: Record[]
+  views: View[]
+  currentViewId: string
+  selectedRecords: string[]
+  editingCell: { recordId: string; fieldId: string } | null
+  filters: FilterCondition[]
+  sorts: SortCondition[]
+  groupBy: string | null
+}
