@@ -193,7 +193,7 @@
 
 1. **克隆项目**
 ```bash
-git clone <repository-url>
+git clone https://github.com/MrXujiang/vue-mute-table
 cd vue-mute-table
 ```
 
