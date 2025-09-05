@@ -558,24 +558,11 @@ interface PerformanceMetrics {
   visibleRecords: number // 可见记录数量
 }
 
-// 性能监控器
-class PerformanceMonitor {
-  startMeasure(name: string): void
-  endMeasure(name: string): number
-  getMetrics(): PerformanceMetrics
-  reset(): void
-}
-```
+
 
 ### 使用示例
 
 ```typescript
-import { PerformanceMonitor } from '@/utils/performance'
-
-const monitor = new PerformanceMonitor()
-
-// 开始测量
-monitor.startMeasure('table-render')
 
 // 执行操作
 renderTable()

@@ -43,7 +43,7 @@
       <!-- 可见行渲染区域 -->
       <div class="visible-rows">
         <!-- 分组渲染 -->
-        <template v-if="groupedData.length > 0">
+        <template v-if="groupedRecords.length > 0">
           <div 
             v-for="(group, groupIndex) in visibleGroups" 
             :key="group.key"
@@ -163,24 +163,24 @@ const startIndex = computed(() => {
 const endIndex = computed(() => {
   const visibleCount = Math.ceil(props.containerHeight / props.rowHeight)
   return Math.min(
-    filteredRecords.value.length - 1,
+    filteredRecords.length - 1,
     startIndex.value + visibleCount + props.overscan * 2
   )
 })
 
 const visibleRecords = computed(() => {
-  if (groupedData.value.length > 0) return []
-  return filteredRecords.value.slice(startIndex.value, endIndex.value + 1)
+  if (groupedRecords.length > 0) return []
+  return filteredRecords.slice(startIndex.value, endIndex.value + 1)
 })
 
 const offsetY = computed(() => startIndex.value * props.rowHeight)
 const totalHeight = computed(() => {
-  if (groupedData.value.length > 0) {
-    return groupedData.value.reduce((total, group) => {
+  if (groupedRecords.length > 0) {
+    return groupedRecords.reduce((total: number, group: GroupData) => {
       return total + props.groupHeaderHeight + (group.expanded ? group.records.length * props.rowHeight : 0)
     }, 0)
   }
-  return filteredRecords.value.length * props.rowHeight
+  return filteredRecords.length * props.rowHeight
 })
 
 const visibleHeight = computed(() => {
@@ -189,14 +189,14 @@ const visibleHeight = computed(() => {
 
 // 分组虚拟滚动
 const visibleGroups = computed(() => {
-  if (groupedData.value.length === 0) return []
+  if (groupedRecords.length === 0) return []
   
   const groups = []
   let currentY = 0
   const viewportTop = scrollTop.value
   const viewportBottom = scrollTop.value + props.containerHeight
   
-  for (const group of groupedData.value) {
+  for (const group of groupedRecords) {
     const groupHeight = props.groupHeaderHeight + (group.expanded ? group.records.length * props.rowHeight : 0)
     
     // 检查分组是否在可视区域内
@@ -230,7 +230,7 @@ const getVisibleRecordsInGroup = (group: GroupData, groupContentY: number) => {
 
 // 水平滚动相关
 const totalWidth = computed(() => {
-  return visibleFields.value.reduce((total, field) => total + field.width, 0) + 48 // 48px for checkbox
+  return visibleFields.reduce((total, field) => total + field.width, 0) + 48 // 48px for checkbox
 })
 
 const showHorizontalScrollbar = computed(() => {
@@ -252,7 +252,7 @@ const horizontalThumbLeft = computed(() => {
 const getColumnLeft = (index: number) => {
   let left = 48 // checkbox width
   for (let i = 0; i < index; i++) {
-    left += visibleFields.value[i].width
+  left += visibleFields[i].width
   }
   return left
 }
@@ -261,7 +261,7 @@ const getColumnLeft = (index: number) => {
 const { 
   visibleFields, 
   filteredRecords, 
-  groupedData, 
+  groupedRecords, 
   selectedRecords, 
   editingCell,
   toggleRecordSelection,
@@ -273,7 +273,7 @@ const {
 } = tableStore
 
 const allSelected = computed(() => {
-  return filteredRecords.value.length > 0 && selectedRecords.value.length === filteredRecords.value.length
+  return filteredRecords.length > 0 && selectedRecords.length === filteredRecords.length
 })
 
 // 滚动处理
@@ -289,7 +289,7 @@ const handleScroll = (event: Event) => {
   }, 150)
 }
 
-let scrollTimeout = ref<NodeJS.Timeout>()
+let scrollTimeout = ref<number>()
 
 // 列拖拽
 const startColumnDrag = (event: DragEvent, index: number) => {
@@ -303,12 +303,12 @@ const startColumnDrag = (event: DragEvent, index: number) => {
 const startColumnResize = (event: MouseEvent, index: number) => {
   event.preventDefault()
   const startX = event.clientX
-  const startWidth = visibleFields.value[index].width
+  const startWidth = visibleFields[index].width
   
   const handleMouseMove = (e: MouseEvent) => {
     const diff = e.clientX - startX
     const newWidth = Math.max(80, startWidth + diff)
-    tableStore.updateField(visibleFields.value[index].id, { width: newWidth })
+  tableStore.updateField(visibleFields[index].id, { width: newWidth })
   }
   
   const handleMouseUp = () => {
@@ -367,7 +367,7 @@ const toggleSelectAll = () => {
 }
 
 const toggleGroup = (groupKey: string) => {
-  const group = groupedData.value.find(g => g.key === groupKey)
+  const group = groupedRecords.find(g => g.key === groupKey)
   if (group) {
     group.expanded = !group.expanded
   }
@@ -407,7 +407,7 @@ onUnmounted(() => {
 })
 
 // 监听数据变化，重置滚动位置
-watch(() => filteredRecords.value.length, () => {
+watch(() => filteredRecords.length, () => {
   if (scrollContainerRef.value) {
     scrollContainerRef.value.scrollTop = 0
     scrollTop.value = 0

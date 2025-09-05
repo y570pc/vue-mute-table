@@ -12,7 +12,8 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "")
   const isDev = command === "serve"
   const isProd = command === "build"
-
+  const isWebComponent = mode === 'webc'
+  
   return {
     plugins: [
       vue({
@@ -118,6 +119,7 @@ export default defineConfig(({ command, mode }) => {
         "~": resolve(__dirname, "src"),
         "#": resolve(__dirname, "types"),
       },
+      indexHtml: !isWebComponent ? true : false, // 可选
     },
 
     // 移除 CSS 配置中的 require，改用独立的 PostCSS 配置文件
@@ -143,7 +145,30 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
-    build: {
+
+    // ...已有plugins、resolve等
+    build: isWebComponent
+      ? {
+            // 禁用默认的 HTML 入口
+            rollupOptions: {
+              input: 'src/shareview-webcomponent.ts', // ✅ 明确入口
+              output: {
+                // 可选：自定义输出
+                format: 'es'
+              }
+            },
+            lib: {
+              entry: 'src/shareview-webcomponent.ts',
+              name: 'ShareView',
+              formats: ['es'],
+              fileName: 'shareview-webcomponent'
+            },
+            outDir: 'dist-webc', // 建议输出到单独目录
+            emptyOutDir: true,
+            cssCodeSplit: false,
+            // 关键：不要让 Vite 寻找 index.html
+        }
+      :  {
       target: "es2015",
       outDir: "dist",
       assetsDir: "assets",
@@ -212,6 +237,11 @@ export default defineConfig(({ command, mode }) => {
       __VUE_OPTIONS_API__: true,
       __VUE_PROD_DEVTOOLS__: false,
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+      // 兼容 web component 构建，防止 process is not defined
+      'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'production'),
+        npm_package_version: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+      },
     },
   }
 })

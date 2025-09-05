@@ -16,7 +16,8 @@
     "test:coverage": "vitest --coverage",
     "analyze": "vite-bundle-analyzer dist",
     "clean": "rimraf dist node_modules/.vite",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build:webc": "vite build --mode webc"
   },
   "dependencies": {
     "@vueuse/core": "^10.7.2",
@@ -24,7 +25,7 @@
     "chart.js": "^4.4.1",
     "date-fns": "^3.3.1",
     "file-saver": "^2.0.5",
-    "fuse.js": "^7.0.0",
+    "fuse.js": "^6.6.2",
     "intersection-observer": "^0.12.2",
     "jszip": "^3.10.1",
     "lodash-es": "^4.17.21",
@@ -93,7 +94,7 @@
     "vite-plugin-pwa": "^0.17.4",
     "vite-plugin-windicss": "^1.9.3",
     "vitest": "^1.2.2",
-    "vue-tsc": "^1.8.27"
+    "vue-tsc": "^3.0.6"
   },
   "engines": {
     "node": ">=18.0.0",

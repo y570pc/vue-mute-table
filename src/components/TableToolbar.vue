@@ -9,6 +9,11 @@
         <Settings class="w-4 h-4" />
         字段配置
       </button>
+      <button class="toolbar-btn" @click="toggleFilterModal">
+        <Filter class="w-4 h-4" />
+        筛选
+        <span v-if="activeFiltersCount > 0" class="filter-badge">{{ activeFiltersCount }}</span>
+      </button>
       <button class="toolbar-btn" @click="toggleSortModal">
         <ArrowUpDown class="w-4 h-4" />
         表单配置
@@ -24,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 import {
   Plus,
   Settings,
@@ -43,10 +48,10 @@ const tableStore = useTableStore()
 const router = useRouter()
 
 // 从父组件注入的模态框状态
-const showFieldManager = inject('showFieldManager')
-const showFilterModal = inject('showFilterModal')
-const showGroupModal = inject('showGroupModal')
-const showFormGenerator = inject('showFormGenerator')
+const showFieldManager = inject<Ref<boolean>>('showFieldManager')
+const showFilterModal = inject<Ref<boolean>>('showFilterModal')
+const showGroupModal = inject<Ref<boolean>>('showGroupModal')
+const showFormGenerator = inject<Ref<boolean>>('showFormGenerator')
 
 const showViewConfig = ref(false)
 const showSortModal = ref(false)

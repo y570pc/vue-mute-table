@@ -1,7 +1,7 @@
 export interface Field {
   id: string
   name: string
-  type: "text" | "number" | "date" | "select" | "multiSelect" | "user" | "checkbox" | "url" | "email" | "phone"
+  type: "text" | "number" | "date" | "select" | "multiSelect" | "user" | "checkbox" | "url" | "email" | "phone" | "sparkline"
   width: number
   visible: boolean
   required?: boolean

@@ -114,6 +114,23 @@
         @keydown.tab="finish"
     />
 
+
+    <!-- sparkline类型 -->
+    <div v-else-if="field.type === 'sparkline'" class="sparkline-editor">
+      <input
+        ref="inputRef"
+        v-model="localValue"
+        type="text"
+        class="cell-input"
+        placeholder="如：1,2,3,4"
+        @blur="handleBlur"
+        @keydown.enter="finish"
+        @keydown.escape="cancel"
+        @keydown.tab="finish"
+      />
+      <canvas ref="sparklineCanvas" width="100" height="30" style="margin-top:4px;"></canvas>
+    </div>
+
     <!-- 电话类型 -->
     <input
         v-else-if="field.type === 'phone'"

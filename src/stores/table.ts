@@ -14,6 +14,7 @@ export const useTableStore = defineStore("table", () => {
     { id: "endDate", name: "预计完成日期", type: "date", width: 140, visible: true },
     { id: "isOverdue", name: "是否延期", type: "checkbox", width: 100, visible: true },
     { id: "completedDate", name: "实际完成日期", type: "date", width: 140, visible: true },
+    { id: "sparkline", name: "折线图", type: "sparkline", width: 140, visible: true },
     {
       id: "priority",
       name: "优先级",
@@ -38,6 +39,7 @@ export const useTableStore = defineStore("table", () => {
       isOverdue: false,
       completedDate: "",
       priority: "重要紧急",
+      sparkline: "5,6,7,9,8,7,6,5,4,6,7,8",
     },
     {
       id: "2",

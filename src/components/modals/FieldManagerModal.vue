@@ -57,7 +57,7 @@
                   <input
                       type="checkbox"
                       :checked="field.visible"
-                      @change="toggleFieldVisibility(field.id, $event.target.checked)"
+                      @change="toggleFieldVisibility(field.id, ($event.target as HTMLInputElement)?.checked)"
                   />
                   <span class="toggle-slider"></span>
                 </label>
@@ -264,7 +264,8 @@ const fieldTypes = [
   { value: 'checkbox', label: '复选框' },
   { value: 'url', label: '链接' },
   { value: 'email', label: '邮箱' },
-  { value: 'phone', label: '电话' }
+  { value: 'phone', label: '电话' },
+  { value: 'sparkline', label: '火花图' }
 ]
 
 const fields = computed(() => tableStore.fields || [])
@@ -345,7 +346,7 @@ const saveField = () => {
 
   const fieldData = {
     name: fieldForm.name,
-    type: fieldForm.type,
+    type: fieldForm.type as Field['type'],
     width: fieldForm.width,
     visible: fieldForm.visible,
     required: fieldForm.required,

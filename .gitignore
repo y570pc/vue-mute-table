@@ -14,6 +14,7 @@ dist-ssr
 coverage
 *.local
 
+/dist-webc/
 /cypress/videos/
 /cypress/screenshots/
 

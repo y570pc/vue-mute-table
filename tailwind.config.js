@@ -106,5 +106,9 @@ export default {
       },
     },
   },
+
+  corePlugins: {
+    preflight: false,
+  },
   plugins: [require("@tailwindcss/forms"), require("@tailwindcss/typography"), require("@tailwindcss/aspect-ratio")],
 }

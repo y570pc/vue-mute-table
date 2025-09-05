@@ -1,22 +1,13 @@
 <template>
   <div class="table-view">
-    <!-- 顶部导航栏 -->
-    <AppHeader />
     
     <div class="main-content">
-      <!-- 侧边栏 -->
-      <AppSidebar />
       
       <!-- 主要内容区域 -->
       <main class="content">
-        <!-- 视图标签 -->
-<!--        <ViewTabs />-->
-        
-        <!-- 工具栏 -->
-        <TableToolbar />
         
         <!-- 表格容器 -->
-        <TableContainer />
+        <TableContainer :data="tableData" />
       </main>
     </div>
     
@@ -33,10 +24,6 @@
 <script setup lang="ts">
 import { ref, computed, provide } from 'vue'
 import { useTableStore } from '@/stores/table'
-import AppHeader from '@/components/AppHeader.vue'
-import AppSidebar from '@/components/AppSidebar.vue'
-import ViewTabs from '@/components/ViewTabs.vue'
-import TableToolbar from '@/components/TableToolbar.vue'
 import TableContainer from '@/components/TableContainer.vue'
 import FieldManagerModal from '@/components/modals/FieldManagerModal.vue'
 import FilterModal from '@/components/modals/FilterModal.vue'
@@ -45,14 +32,14 @@ import FormGeneratorModal from '@/components/modals/FormGeneratorModal.vue'
 
 const tableStore = useTableStore()
 
-
 // 模态框状态
 const showFieldManager = ref(false)
 const showFilterModal = ref(false)
 const showGroupModal = ref(false)
 const showFormGenerator = ref(false)
 
-
+const props = defineProps<{ data: any[] }>()
+const tableData = computed(() => props.data || [])
 
 
 // 提供给子组件使用
@@ -62,7 +49,9 @@ provide('showGroupModal', showGroupModal)
 provide('showFormGenerator', showFormGenerator)
 </script>
 
-<style scoped>
+<style>
+
+
 .table-view {
   height: 100vh;
   display: flex;

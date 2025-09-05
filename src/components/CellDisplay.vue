@@ -97,6 +97,13 @@
       <span v-else class="empty-value">-</span>
     </div>
 
+    <!-- sparkline类型 -->
+    <div v-else-if="field.type === 'sparkline'" class="cell-sparkline" style="height:30px;width:100%;">
+      <Line v-if="value" :data="sparklineData" :options="sparklineOptions"  />
+      <span v-else class="empty-value">-</span>
+    </div>
+
+
     <!-- 默认类型 -->
     <span v-else class="cell-text" :title="displayValue">
       {{ displayValue }}
@@ -105,19 +112,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { Line } from 'vue-chartjs'
+import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Title } from 'chart.js'
 import { Check, X, ExternalLink, Mail, Phone } from 'lucide-vue-next'
 import type { Field } from '@/types'
 
+
+Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Title)
 interface Props {
   value: any
   field: Field
   editing?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  editing: false
+const props = defineProps<Props>()
+
+const sparklineData = computed(() => {
+  const values = String(props.value).split(',').map(Number).filter(v => !isNaN(v))
+  return {
+    labels: values.map((_, i) => i + 1),
+    datasets: [
+      {
+        data: values,
+        borderColor: '#3b82f6',
+        borderWidth: 1,
+        pointRadius: 2,
+        fill: false,
+        tension: 0.3
+      }
+    ]
+  }
 })
+
+const sparklineOptions = {
+  responsive: true,
+  plugins: { legend: { display: false }, title: { display: false } },
+  scales: {
+    x: { display: false },
+    y: { display: false }
+  },
+  elements: { line: { borderWidth: 2 }, point: { radius: 0 } }
+}
+
+
+
 
 const displayValue = computed(() => {
   if (props.value === null || props.value === undefined || props.value === '') return '-'

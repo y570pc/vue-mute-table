@@ -37,11 +37,11 @@
         :editing="isEditing(field.id)"
         :row-height="rowHeight"
         @update="handleCellUpdate(field.id, $event)"
-        @finish-edit="$emit('finish-edit')"
+        @finishEdit="$emit('finishEdit')"
       />
     </div>
-  </div>
-</template>
+  </div>E
+</template>E
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'

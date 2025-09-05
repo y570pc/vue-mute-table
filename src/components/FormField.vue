@@ -4,7 +4,7 @@
     <input
         v-if="field.type === 'text'"
         :value="value"
-        @input="$emit('update', $event.target.value)"
+        @input="$emit('update', ($event.target as HTMLInputElement)?.value)"
         type="text"
         class="input"
         :placeholder="field.name"
@@ -14,7 +14,7 @@
     <input
         v-else-if="field.type === 'number'"
         :value="value"
-        @input="$emit('update', Number($event.target.value))"
+        @input="$emit('update', Number(($event.target as HTMLInputElement)?.value))"
         type="number"
         class="input"
         :placeholder="field.name"
@@ -24,7 +24,7 @@
     <input
         v-else-if="field.type === 'date'"
         :value="value"
-        @input="$emit('update', $event.target.value)"
+        @input="$emit('update', ($event.target as HTMLInputElement)?.value)"
         type="date"
         class="input"
     />
@@ -33,7 +33,7 @@
     <select
         v-else-if="field.type === 'select'"
         :value="value"
-        @change="$emit('update', $event.target.value)"
+        @change="$emit('update', ($event.target as HTMLSelectElement)?.value)"
         class="input"
     >
       <option value="">请选择</option>
@@ -46,7 +46,7 @@
     <input
         v-else-if="field.type === 'checkbox'"
         :checked="!!value"
-        @change="$emit('update', $event.target.checked)"
+        @change="$emit('update', ($event.target as HTMLInputElement)?.checked)"
         type="checkbox"
         class="checkbox"
     />
@@ -55,7 +55,7 @@
     <input
         v-else
         :value="value"
-        @input="$emit('update', $event.target.value)"
+        @input="$emit('update', ($event.target as HTMLInputElement)?.value)"
         type="text"
         class="input"
         :placeholder="field.name"
