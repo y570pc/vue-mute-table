@@ -44,7 +44,6 @@
             class="value-input"
             placeholder="输入值"
           />
-          <span v-else class="value-placeholder">—</span>
           <button @click="removeRule(index)" class="remove-rule-btn">−</button>
         </template>
 
@@ -194,11 +193,6 @@ const addGroup = () => {
   border-radius: 4px;
 }
 
-.value-placeholder {
-  font-style: italic;
-  color: #64748b;
-  padding: 0.4rem;
-}
 
 .remove-rule-btn {
   background: #ef4444;

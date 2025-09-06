@@ -610,7 +610,7 @@ const refreshData = () => {
 }
 
 const clearFilters = () => {
-  updateFilters([])
+  updateFilters({  })
 }
 
 // 清理事件监听器

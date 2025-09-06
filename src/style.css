@@ -280,3 +280,20 @@ body {
   @apply px-6 py-4 border-t border-gray-200;
 }
 
+
+/* 修改 option 样式（部分浏览器支持） */
+option {
+  padding: .5em;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* 鼠标悬停时的背景颜色 */
+option:hover {
+  background-color: #e9ecef;
+}
+
+/* 禁用选项的样式 */
+option:disabled {
+  color: #aaa;
+}

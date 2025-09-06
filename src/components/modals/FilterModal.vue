@@ -73,8 +73,7 @@ watch(
   () => props.show,
   (isOpen) => {
     if (isOpen) {
-      const raw = toRaw(props.filters)
-      localFilters.value = cloneDeep(raw)
+      localFilters.value = cloneDeep(props.filters)
       console.log('✅ Modal opened, localFilters set to:', localFilters.value)
     }
   },
