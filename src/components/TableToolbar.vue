@@ -20,6 +20,17 @@
       </button>
     </div>
     <div class="toolbar-right">
+      <input
+        type="file"
+        ref="fileInput"
+        @change="handleFileImport"
+        accept=".json"
+        style="display: none"
+      />
+      <button class="toolbar-btn" @click="triggerFileInput">
+        <Upload class="w-4 h-4" />
+        导入
+      </button>
       <button class="toolbar-btn" @click="exportData">
         <Download class="w-4 h-4" />
         导出
@@ -38,7 +49,8 @@ import {
   Layers,
   ArrowUpDown,
   FileText,
-  Download
+  Download,
+  Upload
 } from 'lucide-vue-next'
 import { useRouter } from "vue-router"
 import { useTableStore } from '@/stores/table'
@@ -55,6 +67,8 @@ const showFormGenerator = inject<Ref<boolean>>('showFormGenerator')
 
 const showViewConfig = ref(false)
 const showSortModal = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+
 
 const activeFiltersCount = computed(() => tableStore.filters.length)
 const activeSortsCount = computed(() => tableStore.sorts.length)
@@ -73,6 +87,27 @@ const generateForm = () => {
 const exportData = () => {
   tableStore.exportData()
 }
+
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileImport = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target?.result as string;
+    if (content) {
+      tableStore.importData(content);
+    }
+  };
+  reader.readAsText(file);
+  // Reset the input value to allow re-uploading the same file
+  target.value = '';
+};
 
 const toggleFieldManager = () => {
   if (showFieldManager) {

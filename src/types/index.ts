@@ -17,21 +17,11 @@ export interface Record {
   [key: string]: any
 }
 
-export interface View {
-  id: string
-  name: string
-  type: "table" | "kanban" | "calendar" | "form"
-  icon: string
-  fields: string[]
-  filters: FilterCondition[]
-  sorts: SortCondition[]
-  groupBy?: string
-}
-
-export interface FilterCondition {
-  id: string
-  fieldId: string
-  operator:
+// A single filter rule, e.g., "Status equals 'In Progress'"
+export interface FilterRule {
+  id: string; // Unique ID for UI purposes
+  fieldId: string;
+  operator: 
     | "equals"
     | "not_equals"
     | "contains"
@@ -43,9 +33,31 @@ export interface FilterCondition {
     | "greater_than"
     | "less_than"
     | "greater_equal"
-    | "less_equal"
-  value: any
-  logic?: "and" | "or"
+    | "less_equal";
+  value: any;
+}
+
+// A group of filters connected by AND/OR logic
+export interface FilterGroup {
+  id: string; // Unique ID for UI purposes
+  logic: 'and' | 'or';
+  // Rules can be other groups, allowing for nesting
+  rules: (FilterRule | FilterGroup)[]; 
+}
+
+// The top-level filter structure is a single group
+export type TopLevelFilter = FilterGroup;
+
+
+export interface View {
+  id: string
+  name: string
+  type: "table" | "kanban" | "calendar" | "form"
+  icon: string
+  fields: string[]
+  filters: TopLevelFilter // Updated type
+  sorts: SortCondition[]
+  groupBy?: string
 }
 
 export interface SortCondition {
@@ -68,7 +80,7 @@ export interface TableState {
   currentViewId: string
   selectedRecords: string[]
   editingCell: { recordId: string; fieldId: string } | null
-  filters: FilterCondition[]
+  filters: TopLevelFilter // Updated type
   sorts: SortCondition[]
   groupBy: string | null
 }

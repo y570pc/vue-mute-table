@@ -1,7 +1,13 @@
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
-import type { Field, Record, View, FilterCondition, SortCondition } from "@/types"
+import type { Field, Record, View, FilterGroup, SortCondition,TopLevelFilter,FilterRule } from "@/types"
 import { generateId } from "@/utils"
+
+// Helper to check if a rule is a group
+function isFilterGroup(rule: FilterRule | FilterGroup): rule is FilterGroup {
+  return 'logic' in rule && 'rules' in rule;
+}
+
 
 export const useTableStore = defineStore("table", () => {
   // 状态 - 添加默认值
@@ -106,7 +112,7 @@ export const useTableStore = defineStore("table", () => {
       type: "table",
       icon: "Table",
       fields: fields.value.map((f) => f.id),
-      filters: [],
+      filters: { id: generateId(), logic: 'and', rules: [] },
       sorts: [],
     },
     // {
@@ -125,86 +131,50 @@ export const useTableStore = defineStore("table", () => {
       type: "form",
       icon: "FileText",
       fields: fields.value.map((f) => f.id),
-      filters: [],
+      filters: { id: generateId(), logic: 'and', rules: [] },
       sorts: [],
     },
   ])
 
+  const filters = ref<TopLevelFilter>({ id: 'root', logic: 'and', rules: [] });
   const currentViewId = ref("table")
   const selectedRecords = ref<string[]>([])
   const editingCell = ref<{ recordId: string; fieldId: string } | null>(null)
-  const filters = ref<FilterCondition[]>([])
   const sorts = ref<SortCondition[]>([])
   const groupBy = ref<string | null>("priority")
 
   // 计算属性 - 添加安全检查
   const currentView = computed(() => views.value?.find((v) => v.id === currentViewId.value) || null)
   const visibleFields = computed(() => (fields.value || []).filter((field) => field.visible))
-
   const filteredRecords = computed(() => {
-    let result = [...(records.value || [])]
-
-    // 应用筛选器
-    if (filters.value && filters.value.length > 0) {
-      filters.value.forEach((filter) => {
-        const field = fields.value?.find((f) => f.id === filter.fieldId)
-        if (!field) return
-
-        result = result.filter((record) => {
-          const value = record[filter.fieldId]
-          switch (filter.operator) {
-            case "equals":
-              return value === filter.value
-            case "not_equals":
-              return value !== filter.value
-            case "contains":
-              return String(value).toLowerCase().includes(String(filter.value).toLowerCase())
-            case "not_contains":
-              return !String(value).toLowerCase().includes(String(filter.value).toLowerCase())
-            case "starts_with":
-              return String(value).toLowerCase().startsWith(String(filter.value).toLowerCase())
-            case "ends_with":
-              return String(value).toLowerCase().endsWith(String(filter.value).toLowerCase())
-            case "is_empty":
-              return value === null || value === undefined || value === ""
-            case "is_not_empty":
-              return value !== null && value !== undefined && value !== ""
-            case "greater_than":
-              return Number(value) > Number(filter.value)
-            case "less_than":
-              return Number(value) < Number(filter.value)
-            case "greater_equal":
-              return Number(value) >= Number(filter.value)
-            case "less_equal":
-              return Number(value) <= Number(filter.value)
-            default:
-              return true
-          }
-        })
-      })
+    let result = [...records.value];
+    // Apply advanced filters if there are any rules
+    if (filters.value && filters.value.rules.length > 0) {
+      result = result.filter(record => evaluateGroup(record, filters.value));
     }
 
-    // 应用排序
+    // Sorting logic remains the same
     if (sorts.value && sorts.value.length > 0) {
       result.sort((a, b) => {
         for (const sort of sorts.value) {
-          const aValue = a[sort.fieldId]
-          const bValue = b[sort.fieldId]
-
-          let comparison = 0
-          if (aValue < bValue) comparison = -1
-          else if (aValue > bValue) comparison = 1
-
+          const aValue = a[sort.fieldId];
+          const bValue = b[sort.fieldId];
+          let comparison = 0;
+          if (aValue < bValue) comparison = -1;
+          else if (aValue > bValue) comparison = 1;
           if (comparison !== 0) {
-            return sort.direction === "desc" ? -comparison : comparison
+            return sort.direction === "desc" ? -comparison : comparison;
           }
         }
-        return 0
-      })
+        return 0;
+      });
     }
-
-    return result
+    return result;
   })
+
+  const updateFilters = (newFilters: TopLevelFilter) => {
+    filters.value = newFilters || { id: 'root', logic: 'and', rules: [] };
+  };
 
   const groupedRecords = computed(() => {
     if (!groupBy.value) return []
@@ -387,9 +357,37 @@ export const useTableStore = defineStore("table", () => {
     }
   }
 
-  const updateFilters = (newFilters: FilterCondition[]) => {
-    filters.value = newFilters || []
-  }
+
+
+  const evaluateRule = (record: Record, rule: FilterRule): boolean => {
+    const value = record[rule.fieldId];
+    const filterValue = rule.value;
+    switch (rule.operator) {
+      case "equals": return value === filterValue;
+      case "not_equals": return value !== filterValue;
+      case "contains": return String(value).toLowerCase().includes(String(filterValue).toLowerCase());
+      case "not_contains": return !String(value).toLowerCase().includes(String(filterValue).toLowerCase());
+      case "starts_with": return String(value).toLowerCase().startsWith(String(filterValue).toLowerCase());
+      case "ends_with": return String(value).toLowerCase().endsWith(String(filterValue).toLowerCase());
+      case "is_empty": return value === null || value === undefined || value === "";
+      case "is_not_empty": return value !== null && value !== undefined && value !== "";
+      case "greater_than": return Number(value) > Number(filterValue);
+      case "less_than": return Number(value) < Number(filterValue);
+      case "greater_equal": return Number(value) >= Number(filterValue);
+      case "less_equal": return Number(value) <= Number(filterValue);
+      default: return true;
+    }
+  };  
+
+  const evaluateGroup = (record: Record, group: FilterGroup): boolean => {
+    const evaluator = (rule: FilterRule | FilterGroup) => 
+      isFilterGroup(rule) ? evaluateGroup(record, rule) : evaluateRule(record, rule);
+
+    if (group.logic === 'and') return group.rules.every(evaluator);
+    if (group.logic === 'or') return group.rules.some(evaluator);
+    return true;
+  };
+
 
   const updateSorts = (newSorts: SortCondition[]) => {
     sorts.value = newSorts || []
