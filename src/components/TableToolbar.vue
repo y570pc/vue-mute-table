@@ -8,11 +8,12 @@
       <button class="toolbar-btn" @click="toggleFieldManager">
         <Settings class="w-4 h-4" />
         字段配置
+        
       </button>
       <button class="toolbar-btn" @click="toggleFilterModal">
         <Filter class="w-4 h-4" />
         筛选
-        <span v-if="activeFiltersCount > 0" class="filter-badge">{{ activeFiltersCount }}</span>
+        <span  v-if="hasActiveFilters" class="badge-dot"></span>
       </button>
       <button class="toolbar-btn" @click="toggleSortModal">
         <ArrowUpDown class="w-4 h-4" />
@@ -70,7 +71,6 @@ const showSortModal = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 
-const activeFiltersCount = computed(() => tableStore.filters.length)
 const activeSortsCount = computed(() => tableStore.sorts.length)
 const groupBy = computed(() => tableStore.groupBy)
 
@@ -130,6 +130,13 @@ const toggleGroupModal = () => {
     showGroupModal.value = !showGroupModal.value
   }
 }
+
+
+const hasActiveFilters = computed(() => {
+  const filters = tableStore.filters;
+  // 简单判断是否有活动过滤器
+  return filters && filters.rules && filters.rules.length > 0;
+});
 
 const toggleSortModal = () => {
   router.push('/form')
@@ -199,6 +206,17 @@ const toggleSortModal = () => {
   align-items: center;
   justify-content: center;
 }
+
+.badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background-color: #d42727; /* 红色 */
+  border-radius: 50%;
+}
+
 
 @media (max-width: 768px) {
   .table-toolbar {

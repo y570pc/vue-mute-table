@@ -1,32 +1,27 @@
+<!-- components/FilterModal.vue -->
 <template>
   <div v-if="show" class="modal-overlay" @click.self="close">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>筛选</h3>
-        <button @click="close" class="close-btn">&times;</button>
+        <h3>高级筛选</h3>
+        <button @click="$emit('close')" class="close-btn">
+          <X class="w-4 h-4" />
+        </button>
       </div>
       <div class="modal-body">
-        <div v-for="(condition, index) in localFilters" :key="index" class="filter-condition">
-          <select v-model="condition.fieldId" class="filter-select">
-            <option disabled value="">选择字段</option>
-            <option v-for="field in fields" :key="field.id" :value="field.id">
-              {{ field.name }}
-            </option>
-          </select>
-          <select v-model="condition.operator" class="filter-select">
-            <option disabled value="">选择操作</option>
-            <option v-for="op in operators" :key="op.value" :value="op.value">
-              {{ op.label }}
-            </option>
-          </select>
-          <input v-model="condition.value" type="text" class="filter-input" placeholder="输入值" />
-          <button @click="removeFilter(index)" class="remove-filter-btn">-</button>
-        </div>
-        <button @click="addFilter" class="add-filter-btn">+ 添加筛选条件</button>
+        <!-- 递归渲染根组 -->
+        <FilterG
+          v-if="localFilters"
+          :group="localFilters"
+          :fields="fields"
+          @remove-group="handleRemoveRoot"
+        />
+        <button @click="addRule" class="add-filter-btn">+ 添加条件</button>
+        <button @click="addGroup" class="add-filter-btn">+ 添加分组 (OR)</button>
       </div>
       <div class="modal-footer">
-        <button @click="close" class="btn-secondary">取消</button>
-        <button @click="applyFilters" class="btn-primary">应用</button>
+        <button @click="handleClose" class="btn-secondary">取消</button>
+        <button @click="handleApply" class="btn-primary">应用</button>
       </div>
     </div>
   </div>
@@ -34,21 +29,30 @@
 
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits } from 'vue';
-import type { FilterCondition, Field } from '@/types';
+import { generateId } from '@/utils';
+import { X} from 'lucide-vue-next'
+import type { Field, TopLevelFilter, FilterRule, FilterGroup } from '@/types';
+import FilterG from './FilterGroup.vue'; // 递归子组件
+import cloneDeep from 'lodash.clonedeep'
 
 const props = defineProps<{
   show: boolean;
   fields: Field[];
-  filters: FilterCondition[];
+  filters: TopLevelFilter; // 接收嵌套结构
 }>();
 
-const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'apply', filters: FilterCondition[]): void;
-}>();
+const emit = defineEmits(['apply', 'close'])
+const handleApply = () => {
+  emit('apply', localFilters.value)
+}
 
-const localFilters = ref<FilterCondition[]>([]);
+const handleClose = () => {
+  emit('close')
+}
 
+const localFilters = ref<TopLevelFilter>({ id: 'root', logic: 'and', rules: [] });
+
+// 操作符选项
 const operators = [
   { value: 'equals', label: '等于' },
   { value: 'not_equals', label: '不等于' },
@@ -58,37 +62,79 @@ const operators = [
   { value: 'ends_with', label: '结尾是' },
   { value: 'is_empty', label: '为空' },
   { value: 'is_not_empty', label: '不为空' },
+  { value: 'greater_than', label: '大于' },
+  { value: 'less_than', label: '小于' },
+  { value: 'greater_equal', label: '大于等于' },
+  { value: 'less_equal', label: '小于等于' },
 ];
 
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    // Deep copy the filters to allow for local, non-reactive changes
-    localFilters.value = JSON.parse(JSON.stringify(props.filters));
-  }
-});
+// ✅ 每次打开 Modal，从 props.filters 初始化 localFilters
+watch(
+  () => props.show,
+  (isOpen) => {
+    if (isOpen) {
+      const raw = toRaw(props.filters)
+      localFilters.value = cloneDeep(raw)
+      console.log('✅ Modal opened, localFilters set to:', localFilters.value)
+    }
+  },
+  { immediate: true }
+)
 
-const addFilter = () => {
-  localFilters.value.push({ fieldId: '', operator: '', value: '' });
+// 添加单个规则
+const addRule = () => {
+  if (!localFilters.value.rules) localFilters.value.rules = [];
+  localFilters.value.rules.push({
+    id: generateId(),
+    fieldId: '',
+    operator: 'equals',
+    value: '',
+  });
 };
 
-const removeFilter = (index: number) => {
-  localFilters.value.splice(index, 1);
+// 添加一个 OR 分组
+const addGroup = () => {
+  if (!localFilters.value.rules) localFilters.value.rules = [];
+  localFilters.value.rules.push({
+    id: generateId(),
+    logic: 'or',
+    rules: [],
+  });
+};
+
+// 根组被删（理论上不会发生，但保留）
+const handleRemoveRoot = () => {
+  localFilters.value.rules = [];
 };
 
 const applyFilters = () => {
-  // Filter out any incomplete conditions before emitting
-  const validFilters = localFilters.value.filter(f => f.fieldId && f.operator);
-  emit('apply', validFilters);
+  // 可以在这里过滤空规则
+  cleanEmptyRules(localFilters.value);
+  emit('apply', localFilters.value);
   close();
 };
+
+// 清理空规则（递归）
+function cleanEmptyRules(group: FilterGroup) {
+  group.rules = group.rules.filter((rule) => {
+    if ('logic' in rule) {
+      cleanEmptyRules(rule);
+      return rule.rules.length > 0;
+    }
+    return rule.fieldId && rule.operator;
+  });
+}
 
 const close = () => {
   emit('close');
 };
+
+
+
 </script>
 
 <style scoped>
-/* Add your styles here */
+/* 保持原有样式 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -104,8 +150,10 @@ const close = () => {
 .modal-content {
   background: white;
   border-radius: 8px;
-  width: 500px;
+  width: 600px;
   max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -116,28 +164,33 @@ const close = () => {
   align-items: center;
 }
 
+
+.close-btn {
+  padding: 4px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+}
+
 .modal-body {
   padding: 1rem;
 }
 
-.filter-condition {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.filter-select, .filter-input {
-  flex-grow: 1;
-  padding: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-}
-
-.add-filter-btn, .remove-filter-btn {
-  border: none;
+.add-filter-btn {
+  margin-top: 0.5rem;
   background: none;
-  cursor: pointer;
+  border: 1px dashed #94a3b8;
+  color: #334155;
   padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
 }
 
 .modal-footer {

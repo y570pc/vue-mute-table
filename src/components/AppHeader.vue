@@ -11,17 +11,7 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="header-btn">
 
-        <a href="http://pxcharts.com" target="_blank">高级多维表格</a>
-      </button>
-      <button class="header-btn">
-        <Settings class="w-4 h-4" />
-        <a href="https://flowmix.turntip.cn/fm/static/my.8ee63da4.png" target="_blank">联系作者</a>
-      </button>
-      <button class="header-btn">
-        <a href="https://mindlink.turntip.cn" target="_blank">智能文档</a>
-      </button>
     </div>
   </header>
 </template>

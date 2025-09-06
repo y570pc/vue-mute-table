@@ -70,11 +70,7 @@
                 >
                   <GripVertical class="w-4 h-4" />
                 </div>
-                <component :is="getFieldIcon(field.type)" class="w-4 h-4" />
                 <span class="field-name">{{ field.name }}</span>
-                <button class="field-menu-btn" @click.stop="showFieldMenu($event, field)">
-                  <ChevronDown class="w-3 h-3" />
-                </button>
               </div>
 
               <!-- 列宽调整手柄 - 优化拖拽冲突 -->
@@ -788,25 +784,12 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.field-menu-btn {
-  padding: 2px;
-  border: none;
-  background: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #9ca3af;
-  opacity: 0;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-}
 
-.header-cell:hover .field-menu-btn {
+.header-cell:hover {
   opacity: 1;
 }
 
-.field-menu-btn:hover {
-  background: #f3f4f6;
-}
+
 
 .resize-handle {
   position: absolute;

@@ -30,7 +30,7 @@
       :fields="tableStore.fields"
       :filters="tableStore.filters"
       @close="showFilterModal = false" 
-      @apply="applyFilters"
+      @apply="onApplyFilters"
     />
     <GroupModal v-if="showGroupModal" @close="showGroupModal = false" />
     <FormGeneratorModal v-if="showFormGenerator" @close="showFormGenerator = false" />
@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { ref, computed, provide } from 'vue'
 import { useTableStore } from '@/stores/table'
-import type { FilterCondition } from '@/types';
+import type {  TopLevelFilter } from '@/types';
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import ViewTabs from '@/components/ViewTabs.vue'
@@ -60,11 +60,10 @@ const showFilterModal = ref(false)
 const showGroupModal = ref(false)
 const showFormGenerator = ref(false)
 
-const applyFilters = (newFilters: FilterCondition[]) => {
-  tableStore.updateFilters(newFilters);
-  showFilterModal.value = false; // Close modal on apply
+const onApplyFilters = (newFilters: TopLevelFilter) => {
+  tableStore.setFilters(newFilters)// 或 tableStore.setFilters(newFilters)
+  showFilterModal.value = false;
 };
-
 
 // 提供给子组件使用
 provide('showFieldManager', showFieldManager)

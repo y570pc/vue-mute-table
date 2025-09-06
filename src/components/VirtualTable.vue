@@ -22,9 +22,6 @@
         <div class="header-content" draggable="true" @dragstart="startColumnDrag($event, index)">
           <component :is="getFieldIcon(field.type)" class="w-4 h-4" />
           <span>{{ field.name }}</span>
-          <button class="field-menu-btn" @click="showFieldMenu($event, field)">
-            <ChevronDown class="w-3 h-3" />
-          </button>
         </div>
         <div class="resize-handle"></div>
       </div>
@@ -121,11 +118,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { ChevronDown, ChevronRight } from 'lucide-vue-next'
+import { ChevronRight } from 'lucide-vue-next'
 import { useTableStore } from '@/stores/table'
 import { getFieldIcon } from '@/utils'
 import VirtualRow from './VirtualRow.vue'
-import type { Field, Record, GroupData } from '@/types'
+import type {  Record, GroupData } from '@/types'
 
 // Props
 interface Props {
@@ -373,10 +370,6 @@ const toggleGroup = (groupKey: string) => {
   }
 }
 
-const showFieldMenu = (event: MouseEvent, field: Field) => {
-  // 显示字段菜单
-  console.log('Show field menu:', field)
-}
 
 const updateCell = (recordId: string, fieldId: string, value: any) => {
   updateRecord(recordId, { [fieldId]: value })
@@ -460,24 +453,11 @@ watch(() => filteredRecords.length, () => {
   height: 100%;
 }
 
-.field-menu-btn {
-  padding: 2px;
-  border: none;
-  background: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #9ca3af;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.header-cell:hover .field-menu-btn {
+.header-cell:hover  {
   opacity: 1;
 }
 
-.field-menu-btn:hover {
-  background: #f3f4f6;
-}
+
 
 .resize-handle {
   position: absolute;

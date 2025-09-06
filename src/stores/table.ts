@@ -149,7 +149,7 @@ export const useTableStore = defineStore("table", () => {
   const filteredRecords = computed(() => {
     let result = [...records.value];
     // Apply advanced filters if there are any rules
-    if (filters.value && filters.value.rules.length > 0) {
+    if (filters.value &&  Array.isArray(filters.value.rules) && filters.value.rules.length > 0) {
       result = result.filter(record => evaluateGroup(record, filters.value));
     }
 
@@ -171,6 +171,11 @@ export const useTableStore = defineStore("table", () => {
     }
     return result;
   })
+
+  // action
+  const setFilters = (newFilters: TopLevelFilter) => {
+    filters.value = newFilters
+  }
 
   const updateFilters = (newFilters: TopLevelFilter) => {
     filters.value = newFilters || { id: 'root', logic: 'and', rules: [] };
@@ -402,7 +407,7 @@ export const useTableStore = defineStore("table", () => {
       currentViewId.value = viewId
       const view = views.value?.find((v) => v.id === viewId)
       if (view) {
-        filters.value = view.filters || []
+        filters.value = view.filters || { id: 'root', logic: 'and', rules: [] };
         sorts.value = view.sorts || []
         groupBy.value = view.groupBy || null
       }
@@ -501,6 +506,21 @@ export const useTableStore = defineStore("table", () => {
     }
   }
 
+  const importData = (json: string) => {
+    try {
+      const data = JSON.parse(json)
+      if (data.fields) fields.value = data.fields
+      if (data.records) records.value = data.records
+      if (data.views) views.value = data.views
+      if (data.currentViewId) currentViewId.value = data.currentViewId
+      if (data.filters) filters.value = data.filters
+      if (data.sorts) sorts.value = data.sorts
+      if (data.groupBy !== undefined) groupBy.value = data.groupBy
+    } catch (error) {
+      console.error("导入数据失败:", error)
+    }
+  }
+
   return {
     // 状态
     fields,
@@ -540,5 +560,7 @@ export const useTableStore = defineStore("table", () => {
     saveToStorage,
     loadFromStorage,
     exportData,
+    setFilters,
+    importData
   }
 })

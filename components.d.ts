@@ -13,6 +13,7 @@ declare module 'vue' {
     CellEditor: typeof import('./src/components/CellEditor.vue')['default']
     CellRenderer: typeof import('./src/components/CellRenderer.vue')['default']
     FieldManagerModal: typeof import('./src/components/modals/FieldManagerModal.vue')['default']
+    FilterGroup: typeof import('./src/components/modals/FilterGroup.vue')['default']
     FilterModal: typeof import('./src/components/modals/FilterModal.vue')['default']
     FormField: typeof import('./src/components/FormField.vue')['default']
     FormGeneratorModal: typeof import('./src/components/modals/FormGeneratorModal.vue')['default']
