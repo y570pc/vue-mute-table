@@ -7,46 +7,37 @@
       <main class="content">
         
         <!-- 表格容器 -->
-        <TableContainer :data="tableData" />
+        <TableContainer />
       </main>
     </div>
+  
     
-
-    
-    <!-- 模态框 -->
-    <FieldManagerModal v-if="showFieldManager" @close="showFieldManager = false" />
-    <FilterModal v-if="showFilterModal" @close="showFilterModal = false" />
-    <GroupModal v-if="showGroupModal" @close="showGroupModal = false" />
-    <FormGeneratorModal v-if="showFormGenerator" @close="showFormGenerator = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
+import { watchEffect } from 'vue'
 import { useTableStore } from '@/stores/table'
 import TableContainer from '@/components/TableContainer.vue'
-import FieldManagerModal from '@/components/modals/FieldManagerModal.vue'
-import FilterModal from '@/components/modals/FilterModal.vue'
-import GroupModal from '@/components/modals/GroupModal.vue'
-import FormGeneratorModal from '@/components/modals/FormGeneratorModal.vue'
+import type { Field, Record } from '@/types' // Importing types for clarity
+
+// 1. Define props to receive 'fields' and 'records' from the parent
+const props = defineProps<{
+  fields: Field[];
+  records: Record[];
+}>()
 
 const tableStore = useTableStore()
 
-// 模态框状态
-const showFieldManager = ref(false)
-const showFilterModal = ref(false)
-const showGroupModal = ref(false)
-const showFormGenerator = ref(false)
+// 2. Use watchEffect to reactively update the store whenever the props change
+watchEffect(() => {
+  if (props.fields && props.records) {
+    // 3. Call the new store action to load the shared data
+    tableStore.loadShareData(props.fields, props.records);
+  }
+});
 
-const props = defineProps<{ data: any[] }>()
-const tableData = computed(() => props.data || [])
 
-
-// 提供给子组件使用
-provide('showFieldManager', showFieldManager)
-provide('showFilterModal', showFilterModal)
-provide('showGroupModal', showGroupModal)
-provide('showFormGenerator', showFormGenerator)
 </script>
 
 <style>

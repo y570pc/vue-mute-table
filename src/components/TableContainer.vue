@@ -8,7 +8,7 @@
       <span class="stats-item">
         筛选后 {{ filteredRecordsLength }} 条记录
       </span>
-      <span class="stats-item">
+      <span v-if="!isShareMode" class="stats-item">
         已选择 {{ selectedRecords?.length || 0 }} 条
       </span>
       <div class="stats-actions">
@@ -38,7 +38,7 @@
         >
           <div class="table-header" :style="{ width: totalTableWidth + 'px' }">
             <!-- 复选框列 -->
-            <div class="header-cell checkbox-cell">
+            <div v-if="!isShareMode" class="header-cell checkbox-cell">
               <input
                   type="checkbox"
                   :checked="allSelected"
@@ -107,7 +107,7 @@
               @drop="handleRowDrop($event, rowIndex)"
           >
             <!-- 复选框列 -->
-            <div class="row-cell checkbox-cell">
+            <div v-if="!isShareMode" class="row-cell checkbox-cell">
               <input
                   type="checkbox"
                   :checked="selectedRecords.includes(record.id)"
@@ -202,6 +202,8 @@ import { getFieldIcon } from '@/utils'
 import CellEditor from './CellEditor.vue'
 import CellDisplay from './CellDisplay.vue'
 import FieldManagerModal from './modals/FieldManagerModal.vue'
+import { generateId } from "@/utils"
+import { useRoute } from 'vue-router'
 
 const tableStore = useTableStore()
 const isLoading = ref(false)
@@ -255,7 +257,7 @@ const reorderFields = tableStore.reorderFields || (() => {})
 const reorderRecords = tableStore.reorderRecords || (() => {})
 
 const totalRecords = computed(() => (tableStore.records || []).length)
-const hasFilters = computed(() => filters.value.length > 0)
+const hasFilters = computed(() => filters.value.rules.length > 0)
 const allSelected = computed(() => {
   const filtered = filteredRecords.value
   const selected = selectedRecords.value
@@ -610,8 +612,27 @@ const refreshData = () => {
 }
 
 const clearFilters = () => {
-  updateFilters({  })
+  updateFilters({ id: generateId(), logic: 'and', rules: [] })
 }
+
+// 判断是否为分享模式
+const tableContainerRef = ref<HTMLElement | null>(null);
+const isUnderShareView = ref(false);
+onMounted(() => {
+  let element = tableContainerRef.value;
+  while (element && element.parentElement) {
+    element = element.parentElement;
+    if (element.classList.contains('share-view')) {
+      isUnderShareView.value = true;
+      break; // Exit the loop once we find the parent
+    }
+  }
+});
+const route = useRoute()
+const isShareMode = computed(() => isUnderShareView.value ||  route.path === '/share')
+
+
+
 
 // 清理事件监听器
 onUnmounted(() => {
