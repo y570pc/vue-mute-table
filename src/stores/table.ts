@@ -468,6 +468,16 @@ export const useTableStore = defineStore("table", () => {
     }
   }
 
+  const loadShareData = (sharedFields: Field[], sharedRecords: Record[]) => {
+    fields.value = sharedFields;
+    records.value = sharedRecords;
+    filters.value = { id: 'root', logic: 'and', rules: [] };
+    sorts.value = [];
+    groupBy.value = null;
+    selectedRecords.value = [];
+    editingCell.value = null;
+  };
+
   return {
     // 状态
     fields,
@@ -509,6 +519,7 @@ export const useTableStore = defineStore("table", () => {
     loadFromStorage,
     exportData,
     setFilters,
-    importData
+    importData,
+    loadShareData
   }
 })
