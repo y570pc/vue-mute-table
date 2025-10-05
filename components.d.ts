@@ -21,6 +21,7 @@ declare module 'vue' {
     PerformanceMonitor: typeof import('./src/components/PerformanceMonitor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShareContainer: typeof import('./src/components/ShareContainer.vue')['default']
     TableContainer: typeof import('./src/components/TableContainer.vue')['default']
     TableToolbar: typeof import('./src/components/TableToolbar.vue')['default']
     ViewTabs: typeof import('./src/components/ViewTabs.vue')['default']

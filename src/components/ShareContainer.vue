@@ -6,25 +6,8 @@
         总计 {{ totalRecords }} 条记录
       </span>
       <span class="stats-item">
-        筛选后 {{ filteredRecordsLength }} 条记录
-      </span>
-      <span v-if="!isShareMode" class="stats-item">
         已选择 {{ selectedRecords?.length || 0 }} 条
       </span>
-      <div class="stats-actions">
-        <button
-            v-if="selectedRecords.length > 0"
-            @click="deleteSelectedRecords"
-            class="action-btn danger"
-        >
-          <Trash2 class="w-4 h-4" />
-          删除选中
-        </button>
-        <button @click="refreshData" class="action-btn">
-          <RefreshCw class="w-4 h-4" />
-          刷新
-        </button>
-      </div>
     </div>
 
     <!-- 优化后的表格 - 修复滚动同步问题 -->
@@ -38,7 +21,7 @@
         >
           <div class="table-header" :style="{ width: totalTableWidth + 'px' }">
             <!-- 复选框列 -->
-            <div v-if="!isShareMode" class="header-cell checkbox-cell">
+            <div class="header-cell checkbox-cell">
               <input
                   type="checkbox"
                   :checked="allSelected"
@@ -48,7 +31,7 @@
 
             <!-- 字段列 -->
             <div
-                v-for="(field, index) in visibleFields"
+                v-for="(field, index) in tableStore.fields"
                 :key="`header-${field.id}`"
                 class="header-cell"
                 :class="{
@@ -73,12 +56,7 @@
                 <span class="field-name">{{ field.name }}</span>
               </div>
 
-              <!-- 列宽调整手柄 - 优化拖拽冲突 -->
-              <div
-                  class="resize-handle"
-                  @mousedown.stop.prevent="startColumnResize($event, index)"
-                  @dragstart.prevent
-              ></div>
+
             </div>
           </div>
         </div>
@@ -107,7 +85,7 @@
               @drop="handleRowDrop($event, rowIndex)"
           >
             <!-- 复选框列 -->
-            <div v-if="!isShareMode" class="row-cell checkbox-cell">
+            <div class="row-cell checkbox-cell">
               <input
                   type="checkbox"
                   :checked="selectedRecords.includes(record.id)"
@@ -122,7 +100,7 @@
 
             <!-- 数据列 -->
             <div
-                v-for="(field, fieldIndex) in visibleFields"
+                v-for="(field, fieldIndex) in tableStore.fields"
                 :key="`cell-${record.id}-${field.id}`"
                 class="row-cell"
                 :style="getColumnStyle(field)"
@@ -130,18 +108,10 @@
                 @dblclick="startEditCell(record.id, field.id)"
             >
               <!-- 编辑模式 -->
-              <CellEditor
-                  v-if="editingCell?.recordId === record.id && editingCell?.fieldId === field.id"
-                  :value="record[field.id]"
-                  :field="field"
-                  @update="updateCellValue(record.id, field.id, $event)"
-                  @finish="finishEditCell"
-                  @cancel="cancelEditCell"
-              />
+
 
               <!-- 显示模式 -->
               <CellDisplay
-                  v-else
                   :value="record[field.id]"
                   :field="field"
                   :editing="false"
@@ -182,15 +152,7 @@
       </div>
     </div>
 
-    <!-- 空状态 -->
-    <div v-if="!isLoading && (!filteredRecords || filteredRecords.length === 0)" class="empty-state">
-      <Database class="w-16 h-16 text-gray-400" />
-      <h3>暂无数据</h3>
-      <p>{{ hasFilters ? '当前筛选条件下没有找到数据' : '还没有任何记录，点击上方按钮添加第一条记录' }}</p>
-      <button v-if="hasFilters" @click="clearFilters" class="btn-primary">
-        清除筛选条件
-      </button>
-    </div>
+
   </div>
 </template>
 
@@ -202,8 +164,6 @@ import { getFieldIcon } from '@/utils'
 import CellEditor from './CellEditor.vue'
 import CellDisplay from './CellDisplay.vue'
 import FieldManagerModal from './modals/FieldManagerModal.vue'
-import { generateId } from "@/utils"
-import { useRoute } from 'vue-router'
 
 const tableStore = useTableStore()
 const isLoading = ref(false)
@@ -240,41 +200,34 @@ const resizeState = ref({
 const editingCell = ref<{ recordId: string; fieldId: string } | null>(null)
 
 // 安全地获取 store 数据
-const visibleFields = computed(() => tableStore.visibleFields || [])
-const filteredRecords = computed(() => tableStore.filteredRecords || [])
 const selectedRecords = computed(() => tableStore.selectedRecords || [])
-const filters = computed(() => tableStore.filters || [])
+
+
 
 // 安全地访问 store 方法
-const deleteRecord = tableStore.deleteRecord || (() => {})
-const clearSelection = tableStore.clearSelection || (() => {})
-const updateFilters = tableStore.updateFilters || (() => {})
 const toggleRecordSelection = tableStore.toggleRecordSelection || (() => {})
+const clearSelection = tableStore.clearSelection || (() => {})
 const selectAllRecords = tableStore.selectAllRecords || (() => {})
-const updateRecord = tableStore.updateRecord || (() => {})
-const updateField = tableStore.updateField || (() => {})
 const reorderFields = tableStore.reorderFields || (() => {})
 const reorderRecords = tableStore.reorderRecords || (() => {})
 
 const totalRecords = computed(() => (tableStore.records || []).length)
-const hasFilters = computed(() => filters.value.rules.length > 0)
 const allSelected = computed(() => {
-  const filtered = filteredRecords.value
   const selected = selectedRecords.value
-  return filtered.length > 0 && selected.length === filtered.length
+  return  selected.length === totalRecords.value
 })
 
-const filteredRecordsLength = computed(() => filteredRecords.value?.length || 0)
+
 
 // 限制显示的记录数量以提高性能
 const displayRecords = computed(() => {
-  const records = filteredRecords.value
+  const records = tableStore.records
   return records ? records.slice(0, 100) : []
 })
 
 // 计算表格总宽度
 const totalTableWidth = computed(() => {
-  const fieldsWidth = visibleFields.value.reduce((total, field) => total + field.width, 0)
+  const fieldsWidth = tableStore.fields.reduce((total, field) => total + field.width, 0)
   return fieldsWidth + 48 // 48px for checkbox column
 })
 
@@ -353,7 +306,7 @@ const startColumnDrag = (event: DragEvent, index: number) => {
     return
   }
 
-  const field = visibleFields.value[index]
+  const field = tableStore.fields[index]
   if (!field) return
 
   dragState.value = {
@@ -491,38 +444,6 @@ const endRowDrag = () => {
   document.body.classList.remove('dragging-row')
 }
 
-// 列宽调整功能 - 优化拖拽冲突
-const startColumnResize = (event: MouseEvent, index: number) => {
-  const field = visibleFields.value[index]
-  if (!field) return
-
-  resizeState.value = {
-    isResizing: true,
-    columnIndex: index,
-    startX: event.clientX,
-    startWidth: field.width
-  }
-
-  document.addEventListener('mousemove', handleColumnResize)
-  document.addEventListener('mouseup', endColumnResize)
-  document.body.classList.add('resizing-column')
-
-  // 阻止拖拽事件
-  document.body.style.userSelect = 'none'
-}
-
-const handleColumnResize = (event: MouseEvent) => {
-  if (!resizeState.value.isResizing) return
-
-  const deltaX = event.clientX - resizeState.value.startX
-  const newWidth = Math.max(80, resizeState.value.startWidth + deltaX)
-
-  const field = visibleFields.value[resizeState.value.columnIndex]
-  if (field) {
-    updateField(field.id, { width: newWidth })
-  }
-}
-
 const endColumnResize = () => {
   resizeState.value = {
     isResizing: false,
@@ -531,7 +452,6 @@ const endColumnResize = () => {
     startWidth: 0
   }
 
-  document.removeEventListener('mousemove', handleColumnResize)
   document.removeEventListener('mouseup', endColumnResize)
   document.body.classList.remove('resizing-column')
   document.body.style.userSelect = ''
@@ -560,10 +480,7 @@ const cancelEditCell = () => {
   editingCell.value = null
 }
 
-const updateCellValue = (recordId: string, fieldId: string, value: any) => {
-  updateRecord(recordId, { [fieldId]: value })
-  finishEditCell()
-}
+
 
 // 字段管理
 const showFieldMenu = (event: MouseEvent, field: any) => {
@@ -586,58 +503,12 @@ const toggleSelectAll = () => {
   }
 }
 
-const deleteSelectedRecords = async () => {
-  const selected = selectedRecords.value
-  if (!selected || selected.length === 0) return
-
-  if (!confirm(`确定要删除选中的 ${selected.length} 条记录吗？`)) {
-    return
-  }
-
-  isLoading.value = true
-  try {
-    for (const recordId of selected) {
-      deleteRecord(recordId)
-    }
-    clearSelection()
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const refreshData = () => {
-  if (tableStore.loadFromStorage) {
-    tableStore.loadFromStorage()
-  }
-}
-
-const clearFilters = () => {
-  updateFilters({ id: generateId(), logic: 'and', rules: [] })
-}
-
-// 判断是否为分享模式
-const tableContainerRef = ref<HTMLElement | null>(null);
-const isUnderShareView = ref(false);
-onMounted(() => {
-  let element = tableContainerRef.value;
-  while (element && element.parentElement) {
-    element = element.parentElement;
-    if (element.classList.contains('share-view')) {
-      isUnderShareView.value = true;
-      break; // Exit the loop once we find the parent
-    }
-  }
-});
-const route = useRoute()
-const isShareMode = computed(() => isUnderShareView.value ||  route.path === '/share')
-
 
 
 
 // 清理事件监听器
 onUnmounted(() => {
   document.removeEventListener('dragover', updateDragPosition)
-  document.removeEventListener('mousemove', handleColumnResize)
   document.removeEventListener('mouseup', endColumnResize)
   document.body.classList.remove('dragging-column', 'dragging-row', 'resizing-column')
   document.body.style.userSelect = ''

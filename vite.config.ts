@@ -71,8 +71,8 @@ export default defineConfig(({ command, mode }) => {
         dts: true,
       }),
 
-      // PWA 支持
-      VitePWA({
+      // PWA 支持 (webc模式下禁用)
+      ...(!isWebComponent ? [VitePWA({
         registerType: "autoUpdate",
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -97,7 +97,7 @@ export default defineConfig(({ command, mode }) => {
             },
           ],
         },
-      }),
+      })] : []),
 
       // Mock 数据服务 (仅在开发环境启用)
       ...(isDev
@@ -165,7 +165,7 @@ export default defineConfig(({ command, mode }) => {
             },
             outDir: 'dist-webc', // 建议输出到单独目录
             emptyOutDir: true,
-            cssCodeSplit: false,
+            cssCodeSplit: false,  // 将所有 CSS 打包进一个 style.css 文件
             // 关键：不要让 Vite 寻找 index.html
         }
       :  {

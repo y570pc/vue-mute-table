@@ -11,99 +11,13 @@ function isFilterGroup(rule: FilterRule | FilterGroup): rule is FilterGroup {
 
 export const useTableStore = defineStore("table", () => {
   // 状态 - 添加默认值
-  const fields = ref<Field[]>([
-    { id: "title", name: "任务描述", type: "text", width: 200, visible: true, required: true },
-    { id: "details", name: "任务情况总结", type: "text", width: 250, visible: true },
-    { id: "assignee", name: "任务执行人", type: "user", width: 120, visible: true },
-    { id: "status", name: "进展", type: "select", width: 100, visible: true, options: ["进行中", "已完成", "待开始"] },
-    { id: "startDate", name: "开始日期", type: "date", width: 120, visible: true },
-    { id: "endDate", name: "预计完成日期", type: "date", width: 140, visible: true },
-    { id: "isOverdue", name: "是否延期", type: "checkbox", width: 100, visible: true },
-    { id: "completedDate", name: "实际完成日期", type: "date", width: 140, visible: true },
-    { id: "sparkline", name: "折线图", type: "sparkline", width: 140, visible: true },
-    {
-      id: "priority",
-      name: "优先级",
-      type: "select",
-      width: 100,
-      visible: true,
-      options: ["重要紧急", "紧急不重要", "重要不紧急"],
-    },
-  ])
-
-  const records = ref<Record[]>([
-    {
-      id: "1",
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-      title: "完成年度财务报告",
-      details: "任务执行人于小平正在进行年度财务报告的整理工作",
-      assignee: "周北北",
-      status: "进行中",
-      startDate: "2024-11-18",
-      endDate: "2025-11-01",
-      isOverdue: false,
-      completedDate: "",
-      priority: "重要紧急",
-      sparkline: "5,6,7,9,8,7,6,5,4,6,7,8",
-    },
-    {
-      id: "2",
-      createdAt: "2024-01-02T00:00:00Z",
-      updatedAt: "2024-01-02T00:00:00Z",
-      title: "组织年度员工团建活动",
-      details: "任务已经完成，团建活动成功举办",
-      assignee: "周北北",
-      status: "已完成",
-      startDate: "2024-11-08",
-      endDate: "2025-12-26",
-      isOverdue: false,
-      completedDate: "2024-11-16",
-      priority: "重要紧急",
-    },
-    {
-      id: "3",
-      createdAt: "2024-01-03T00:00:00Z",
-      updatedAt: "2024-01-03T00:00:00Z",
-      title: "更新公司网站",
-      details: "网站更新任务由黄泡泡负责，正在进行中",
-      assignee: "黄泡泡",
-      status: "进行中",
-      startDate: "2023-02-04",
-      endDate: "2025-11-20",
-      isOverdue: false,
-      completedDate: "",
-      priority: "紧急不重要",
-    },
-    {
-      id: "4",
-      createdAt: "2024-01-04T00:00:00Z",
-      updatedAt: "2024-01-04T00:00:00Z",
-      title: "招聘新员工",
-      details: "招聘新员工的任务正在进行中",
-      assignee: "周北北",
-      status: "进行中",
-      startDate: "2024-11-27",
-      endDate: "2025-11-20",
-      isOverdue: false,
-      completedDate: "",
-      priority: "紧急不重要",
-    },
-    {
-      id: "5",
-      createdAt: "2024-01-05T00:00:00Z",
-      updatedAt: "2024-01-05T00:00:00Z",
-      title: "开发新产品",
-      details: "任务执行人黄泡泡准备开始新产品开发",
-      assignee: "黄泡泡",
-      status: "待开始",
-      startDate: "2024-12-03",
-      endDate: "2025-10-01",
-      isOverdue: false,
-      completedDate: "",
-      priority: "重要不紧急",
-    },
-  ])
+  // 1. 将 state 的初始值设置为空数组
+  const fields = ref<Field[]>([])
+  const records = ref<Record[]>([])
+  
+  // 2. 添加用于 UI 反馈的新状态
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
   const views = ref<View[]>([
     {
@@ -210,6 +124,39 @@ export const useTableStore = defineStore("table", () => {
   })
 
   // 方法 - 添加错误处理
+  // 3. 创建一个 action 来从 Flask API 获取数据
+  const fetchTableData = async (stepName: string) => {
+    isLoading.value = true
+    error.value = null
+    
+    // 请将此 URL 替换为您真实的 Flask API 地址
+    const FLASK_API_URL = `http://127.0.0.1:5000/api/shared-data/${stepName}`;
+
+    try {
+      const response = await fetch(FLASK_API_URL)
+      if (!response.ok) {
+        throw new Error(`网络请求失败，状态码: ${response.status}`)
+      }
+      
+      // 假设 API 返回的数据结构为 { fields: [...], records: [...] }
+      const data = await response.json()
+
+      // 使用从 API 获取的数据更新 state
+      fields.value = data.fields
+      records.value = data.records
+
+
+
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "发生未知错误"
+      console.error("从 Flask API 获取数据失败:", errorMessage)
+      error.value = errorMessage
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+
   const addRecord = (data: Partial<Record> = {}) => {
     try {
       const newRecord: Record = {
@@ -540,6 +487,7 @@ export const useTableStore = defineStore("table", () => {
     groupedRecords,
 
     // 方法
+    fetchTableData,
     addRecord,
     updateRecord,
     deleteRecord,

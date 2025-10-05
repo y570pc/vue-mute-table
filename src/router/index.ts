@@ -20,7 +20,7 @@ const router = createRouter({
       component: () => import("@/views/FormView.vue"),
     },
     {
-      path: "/share",
+      path: "/share/:stepName",
       name: "share",
       component: () => import("@/views/ShareView.vue"),
       props: route => ({ ...route.query, ...route.params })

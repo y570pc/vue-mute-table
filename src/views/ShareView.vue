@@ -7,46 +7,47 @@
       <main class="content">
         
         <!-- 表格容器 -->
-        <TableContainer :data="tableData" />
+        <ShareContainer />
       </main>
     </div>
     
 
     
-    <!-- 模态框 -->
-    <FieldManagerModal v-if="showFieldManager" @close="showFieldManager = false" />
-    <FilterModal v-if="showFilterModal" @close="showFilterModal = false" />
-    <GroupModal v-if="showGroupModal" @close="showGroupModal = false" />
-    <FormGeneratorModal v-if="showFormGenerator" @close="showFormGenerator = false" />
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
+import { onMounted } from 'vue'
 import { useTableStore } from '@/stores/table'
-import TableContainer from '@/components/TableContainer.vue'
-import FieldManagerModal from '@/components/modals/FieldManagerModal.vue'
-import FilterModal from '@/components/modals/FilterModal.vue'
-import GroupModal from '@/components/modals/GroupModal.vue'
-import FormGeneratorModal from '@/components/modals/FormGeneratorModal.vue'
+import { storeToRefs } from 'pinia'
+import ShareContainer from '@/components/ShareContainer.vue'
+
+const props = withDefaults(
+  defineProps<{
+    stepName: string
+  }>(),
+  {
+    stepName: 'default-step' // 设置默认值
+  }
+)
 
 const tableStore = useTableStore()
 
-// 模态框状态
-const showFieldManager = ref(false)
-const showFilterModal = ref(false)
-const showGroupModal = ref(false)
-const showFormGenerator = ref(false)
+// 2. 从 store 中解构出需要的状态
+const { fields, records } = storeToRefs(tableStore)
 
-const props = defineProps<{ data: any[] }>()
-const tableData = computed(() => props.data || [])
+// 3. 在组件挂载后，使用 props 中的 shareId 调用 action
+onMounted(() => {
+  if (props.stepName) {
+    tableStore.fetchTableData(props.stepName)
+  } else {
+    // 如果没有传入 stepName，可以在这里设置一个错误状态
+    console.error('ShareView: 未提供 stepName prop。')
+  }
+})
 
 
-// 提供给子组件使用
-provide('showFieldManager', showFieldManager)
-provide('showFilterModal', showFilterModal)
-provide('showGroupModal', showGroupModal)
-provide('showFormGenerator', showFormGenerator)
 </script>
 
 <style>
