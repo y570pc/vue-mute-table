@@ -1,7 +1,7 @@
 <template>
   <div class="cell-display" :class="{ clickable: !editing }">
     <!-- 文本类型 -->
-    <span v-if="field.type === 'text'" class="cell-text" :title="displayValue">
+    <span v-if="field.type === 'text'" class="cell-text">
       {{ displayValue }}
     </span>
 
@@ -193,17 +193,67 @@ const getUserInitial = (name: string) => {
   return name.charAt(0).toUpperCase()
 }
 
-const getSelectClass = (value: string) => {
-  const classMap: Record<string, string> = {
-    '进行中': 'status-progress',
-    '已完成': 'status-completed',
-    '待开始': 'status-pending',
-    '重要紧急': 'priority-urgent',
-    '紧急不重要': 'priority-important',
-    '重要不紧急': 'priority-normal'
+// const getSelectClass = (value: string) => {
+//   const classMap: Record<string, string> = {
+//     '重要紧急': 'priority-urgent',
+//     '紧急不重要': 'priority-important',
+//     '重要不紧急': 'priority-normal',
+//     "充电":'status-charge',
+//     "放电":'status-discharge',
+//   }
+//   return classMap[value] || 'status-default'
+// }
+
+
+const DEFAULT_COLORS = [
+  'bg-blue-100 text-blue-800',      // 蓝
+  'bg-green-100 text-green-800',    // 绿
+  'bg-yellow-100 text-yellow-800',  // 黄
+  'bg-purple-100 text-purple-800',  // 紫
+  'bg-pink-100 text-pink-800',      // 粉
+  'bg-indigo-100 text-indigo-800',  // 靛
+  'bg-red-100 text-red-800',        // 红
+  'bg-orange-100 text-orange-800',  // 橙
+  'bg-teal-100 text-teal-800',      // 青
+  'bg-gray-100 text-gray-800',      // 灰
+];
+
+const getStringHashCode = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // 转为32位整数
   }
-  return classMap[value] || 'status-default'
-}
+  return Math.abs(hash);
+};
+
+const getDynamicColorClass = (value: string): string => {
+  const index = getStringHashCode(value) % DEFAULT_COLORS.length;
+  return DEFAULT_COLORS[index];
+};
+
+const SELECT_CLASS_MAP = {
+  '重要紧急': 'priority-urgent',
+  '紧急不重要': 'priority-important',
+  '重要不紧急': 'priority-normal',
+  '充电': 'status-charge',
+  '放电': 'status-discharge',
+} as const;
+
+const getSelectClass = (value: string): string => {
+  if (!value) return 'status-default';
+
+  const selectClassMap = SELECT_CLASS_MAP as { [key: string]: string };
+  
+  // 先查预定义映射
+  if (selectClassMap[value]) {
+    return selectClassMap[value];
+  }
+
+  // 否则使用 10 色动态分配
+  return getDynamicColorClass(value);
+};
 
 const isValidUrl = (url: string) => {
   try {
@@ -262,20 +312,17 @@ const isValidEmail = (email: string) => {
   white-space: nowrap;
 }
 
-.status-progress {
-  background: #fef3c7;
-  color: #92400e;
+
+.status-charge {
+  background: #d5edd1;
+  color: #09a959;
 }
 
-.status-completed {
-  background: #d1fae5;
-  color: #065f46;
+.status-discharge {
+  background: #fecaca;
+  color: #dc2626;
 }
 
-.status-pending {
-  background: #fee2e2;
-  color: #991b1b;
-}
 
 .priority-urgent {
   background: #fecaca;

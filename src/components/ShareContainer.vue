@@ -53,7 +53,7 @@
                 >
                   <GripVertical class="w-4 h-4" />
                 </div>
-                <span class="field-name">{{ field.name }}</span>
+                <span class="field-name" :title="field.tooltip">{{ field.name }}</span>
               </div>
 
 

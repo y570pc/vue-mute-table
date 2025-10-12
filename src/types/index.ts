@@ -8,6 +8,8 @@ export interface Field {
   options?: string[]
   defaultValue?: any
   description?: string
+  tooltip?: string
+
 }
 
 export interface Record {
